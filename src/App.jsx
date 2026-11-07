@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   BookOpen, Code, Layers, Cpu, Sparkles, CheckCircle2, Clock,
   Plus, Trash2, Copy, Check, ChevronRight, ChevronLeft, RotateCcw,
-  Smartphone, Maximize2, Flame, Search, X, Download, Zap, Award
+  Smartphone, Maximize2, Flame, Search, X, Zap, Award, FileText,
+  HelpCircle, Play, Pause, RefreshCw, ExternalLink, Printer, Upload
 } from 'lucide-react';
 
 const INITIAL_ROADMAP = [
@@ -91,6 +92,126 @@ const INITIAL_ROADMAP = [
         ]
       }
     ]
+  }
+];
+
+const INITIAL_VLSI_FORMULAS = [
+  { id: 'vf1', subject: 'Static Timing Analysis (Setup & Hold)', tag: 'STA', done: false, formula: 'Setup: T_clk + T_skew >= T_cq + T_comb + T_su | Hold: T_cq + T_comb >= T_hold + T_skew' },
+  { id: 'vf2', subject: 'CMOS Power Dissipation (Dynamic & Static)', tag: 'CMOS', done: false, formula: 'P_total = α·C_L·V_DD²·f_clk + V_DD·I_sc + V_DD·I_leakage' },
+  { id: 'vf3', subject: 'Asynchronous FIFO Depth & Pointer Math', tag: 'RTL / FIFO', done: false, formula: 'Depth = Burst × (1 - F_rd / F_wr) | Binary-to-Gray: G = B ^ (B >> 1)' },
+  { id: 'vf4', subject: '2:1 MUX Universal Gate Count & Counters', tag: 'Digital', done: false, formula: 'NOT/AND/OR/Latch = 1 MUX | XOR/XNOR/NAND/NOR = 2 MUX | Ring = N states, Johnson = 2N states' },
+  { id: 'vf5', subject: 'SystemVerilog Coverage & SVA Operators', tag: 'Verification', done: false, formula: '|-> Overlapping (Same Clk) | |=> Non-Overlapping (Next Clk) | Total Cov = Code + Functional' }
+];
+
+const INITIAL_QUIZ = [
+  {
+    id: 'q1',
+    topic: 'Digital / MUX Design',
+    question: 'What is the minimum number of 2:1 Multiplexers required to implement a 2-input XOR gate and a 1-bit Full Adder (without complemented inputs)?',
+    options: [
+      'XOR = 2 MUXes, Full Adder = 7 MUXes',
+      'XOR = 1 MUX, Full Adder = 5 MUXes',
+      'XOR = 3 MUXes, Full Adder = 6 MUXes',
+      'XOR = 2 MUXes, Full Adder = 4 MUXes'
+    ],
+    correct: 0,
+    explanation: 'Without inverted inputs, an inverter takes 1 MUX and XOR takes 2 MUXes. A Full Adder (Sum = A⊕B⊕Cin, Cout = AB + Cin(A⊕B)) requires 7 2:1 MUXes.'
+  },
+  {
+    id: 'q2',
+    topic: 'Static Timing Analysis (STA)',
+    question: 'In a synchronous sequential circuit, T_cq = 1.5 ns, T_comb = 4.5 ns, T_setup = 1.0 ns, T_hold = 0.8 ns, and Clock Skew = +0.5 ns (capture clock delayed). What is the maximum operating clock frequency?',
+    options: [
+      '142.8 MHz',
+      '153.8 MHz',
+      '133.3 MHz',
+      '200.0 MHz'
+    ],
+    correct: 1,
+    explanation: 'T_clk(min) = T_cq + T_comb + T_setup - T_skew = 1.5 + 4.5 + 1.0 - 0.5 = 6.5 ns. Therefore, F_max = 1000 / 6.5 = 153.84 MHz.'
+  },
+  {
+    id: 'q3',
+    topic: 'FIFO Design',
+    question: 'An Asynchronous FIFO has Write Clock = 100 MHz and Read Clock = 80 MHz. Up to 100 data words are written in a continuous burst without idle cycles. What is the minimum FIFO depth required?',
+    options: [
+      '16 words',
+      '20 words',
+      '25 words',
+      '32 words'
+    ],
+    correct: 1,
+    explanation: 'Time for 100 writes = 100 × 10 ns = 1000 ns. Words read in 1000 ns = 1000 ns / 12.5 ns = 80 words. Remaining words to buffer = 100 - 80 = 20 words.'
+  },
+  {
+    id: 'q4',
+    topic: 'Verilog HDL Synthesis',
+    question: 'Inside a clocked always @(posedge clk) block, if you write: a = b; c = a; what hardware is synthesized?',
+    options: [
+      'Two series flip-flops (2-stage shift register)',
+      'Parallel flip-flops where both a and c get the value of b on the same clock edge',
+      'A combinational latch with race condition',
+      'Compilation syntax error'
+    ],
+    correct: 1,
+    explanation: 'Because Blocking assignment (=) updates `a` immediately inside the procedural block, `c = a` receives the new value of `b` on the exact same posedge clk, collapsing into parallel flip-flops.'
+  },
+  {
+    id: 'q5',
+    topic: 'SystemVerilog & UVM',
+    question: 'Which UVM phase is a simulation time-consuming task (rather than a function) and executes in parallel across all components?',
+    options: [
+      'build_phase()',
+      'connect_phase()',
+      'run_phase()',
+      'report_phase()'
+    ],
+    correct: 2,
+    explanation: 'Only run_phase() (and its 12 runtime sub-phases like reset_phase, main_phase) is a task that consumes simulation time (#delays, @posedge). All other phases are functions.'
+  },
+  {
+    id: 'q6',
+    topic: 'CMOS Fundamentals',
+    question: 'Why are PMOS transistors used in the Pull-Up Network (PUN) and NMOS in the Pull-Down Network (PDN) of standard CMOS logic gates?',
+    options: [
+      'PMOS passes strong 0 and NMOS passes strong 1',
+      'PMOS passes strong 1 (degraded 0) and NMOS passes strong 0 (degraded 1)',
+      'PMOS has higher electron mobility than NMOS',
+      'To increase sub-threshold leakage current'
+    ],
+    correct: 1,
+    explanation: 'PMOS passes a strong logic 1 (V_DD) without threshold voltage drop, while NMOS passes a strong logic 0 (GND) without threshold drop.'
+  }
+];
+
+const INITIAL_PDF_VAULT = [
+  {
+    id: 'p1',
+    title: 'Digital Logic, 2:1 MUX & K-Map Master Cheat Sheet',
+    category: 'Digital Design',
+    summary: 'Complete 2s complement overflow formulas, MUX universal gate table, Flip-Flop conversions, and Mealy/Moore FSM templates.',
+    url: ''
+  },
+  {
+    id: 'p2',
+    title: 'Static Timing Analysis (STA) & Async FIFO Formula Sheet',
+    category: 'STA / Timing',
+    summary: 'Setup & Hold slack equations with positive/negative skew, multi-cycle paths, CDC 2-FF synchronizers, and FIFO depth cases.',
+    url: ''
+  },
+  {
+    id: 'p3',
+    title: 'SystemVerilog OOP, Constraints & UVM Phasing Handbook',
+    category: 'SV & UVM',
+    summary: 'Shallow vs Deep copy, Polymorphism, rand/dist/solve-before constraints, UVM Factory overrides, and TLM handshake.',
+    url: ''
+  },
+  {
+    id: 'p4',
+    title: 'AMBA APB, AHB-Lite & AXI4 Protocol Timing Guide',
+    category: 'AMBA Protocols',
+    summary: 'APB state diagram, AHB pipelined burst transfers (INCR/WRAP), and AXI4 5-channel VALID/READY deadlock rules.',
+    url: ''
   }
 ];
 
@@ -325,6 +446,34 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_FLASHCARDS;
   });
 
+  const [vlsiFormulas, setVlsiFormulas] = useState(() => {
+    const saved = localStorage.getItem('vlsi_formulas_only_v1');
+    return saved ? JSON.parse(saved) : INITIAL_VLSI_FORMULAS;
+  });
+
+  const [quizList, setQuizList] = useState(() => {
+    const saved = localStorage.getItem('vlsi_quiz_only_v1');
+    return saved ? JSON.parse(saved) : INITIAL_QUIZ;
+  });
+
+  const [pdfVault, setPdfVault] = useState(() => {
+    const saved = localStorage.getItem('vlsi_pdf_only_v1');
+    return saved ? JSON.parse(saved) : INITIAL_PDF_VAULT;
+  });
+
+  // Focus Timer State (15m / 25m / 50m linked to VLSI topic)
+  const [timerSeconds, setTimerSeconds] = useState(25 * 60);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [linkedTopic, setLinkedTopic] = useState('1s & 2s Complement, Signed Overflow & Hex/Binary');
+
+  // Quiz State
+  const [selectedAnswers, setSelectedAnswers] = useState({});
+
+  // PDF Viewer State
+  const [localPdfUrl, setLocalPdfUrl] = useState(null);
+  const [localPdfName, setLocalPdfName] = useState('');
+  const [vaultSubTab, setVaultSubTab] = useState('code'); // 'code' or 'pdf'
+
   const [cardIdx, setCardIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [cardFilter, setCardFilter] = useState('All');
@@ -349,21 +498,33 @@ export default function App() {
   const [fRd, setFRd] = useState(80);
   const [burstSize, setBurstSize] = useState(120);
 
-  useEffect(() => {
-    localStorage.setItem('vlsi_roadmap_v2', JSON.stringify(roadmap));
-  }, [roadmap]);
+  useEffect(() => { localStorage.setItem('vlsi_roadmap_v2', JSON.stringify(roadmap)); }, [roadmap]);
+  useEffect(() => { localStorage.setItem('vlsi_daily_v2', JSON.stringify(dailyTasks)); }, [dailyTasks]);
+  useEffect(() => { localStorage.setItem('vlsi_snippets_v2', JSON.stringify(snippets)); }, [snippets]);
+  useEffect(() => { localStorage.setItem('vlsi_cards_v2', JSON.stringify(cards)); }, [cards]);
+  useEffect(() => { localStorage.setItem('vlsi_formulas_only_v1', JSON.stringify(vlsiFormulas)); }, [vlsiFormulas]);
+  useEffect(() => { localStorage.setItem('vlsi_quiz_only_v1', JSON.stringify(quizList)); }, [quizList]);
+  useEffect(() => { localStorage.setItem('vlsi_pdf_only_v1', JSON.stringify(pdfVault)); }, [pdfVault]);
 
   useEffect(() => {
-    localStorage.setItem('vlsi_daily_v2', JSON.stringify(dailyTasks));
-  }, [dailyTasks]);
+    if (!timerRunning) return;
+    const interval = setInterval(() => {
+      setTimerSeconds((prev) => {
+        if (prev <= 1) {
+          setTimerRunning(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerRunning]);
 
-  useEffect(() => {
-    localStorage.setItem('vlsi_snippets_v2', JSON.stringify(snippets));
-  }, [snippets]);
-
-  useEffect(() => {
-    localStorage.setItem('vlsi_cards_v2', JSON.stringify(cards));
-  }, [cards]);
+  const formatTimer = (secs) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   const toggleTopicStatus = (mIdx, wIdx, tIdx) => {
     const updated = [...roadmap];
@@ -390,6 +551,46 @@ export default function App() {
     setTimeout(() => setCopiedId(null), 1800);
   };
 
+  const handlePrintFullCheatSheet = () => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+    const htmlContent = `
+      <html>
+      <head>
+        <title>Uday Kiran - VLSI ASIC Design & Verification Revision PDF</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; line-height: 1.5; }
+          h1 { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 8px; }
+          h2 { color: #0f172a; margin-top: 24px; background: #f1f5f9; padding: 8px 12px; border-left: 4px solid #0284c7; }
+          .box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+          pre { background: #0f172a; color: #f8fafc; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <h1>VLSI ASIC Design & Verification Vault — Kandregula Uday Kiran</h1>
+        <h2>1. Core VLSI, STA, FIFO & CMOS Formulas</h2>
+        ${vlsiFormulas.map(f => `<div class="box"><strong>${f.subject} [${f.tag}]:</strong><br/><code>${f.formula}</code></div>`).join('')}
+        <h2>2. VLSI Interview Flashcards (English + Telugu)</h2>
+        ${cards.map(c => `<div class="box"><strong>Q [${c.category}]: ${c.q}</strong><br/>A: ${c.a}<br/><em>${c.te || ''}</em></div>`).join('')}
+        <h2>3. Synthesizable RTL, SystemVerilog & UVM Code Vault</h2>
+        ${snippets.map(s => `<div class="box"><strong>${s.title} (${s.lang})</strong><p>${s.note}</p><pre>${s.code}</pre></div>`).join('')}
+        <script>window.onload = () => window.print();</script>
+      </body>
+      </html>
+    `;
+    win.document.write(htmlContent);
+    win.document.close();
+  };
+
+  const handleLocalPdfUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setLocalPdfUrl(url);
+      setLocalPdfName(file.name);
+    }
+  };
+
   const handleSaveNewItem = (e) => {
     e.preventDefault();
     if (!newTitle.trim() || !newBody.trim()) return;
@@ -405,7 +606,8 @@ export default function App() {
         ...snippets
       ]);
       setActiveTab('vault');
-    } else {
+      setVaultSubTab('code');
+    } else if (newItemType === 'card') {
       setCards([
         ...cards,
         {
@@ -417,6 +619,19 @@ export default function App() {
         }
       ]);
       setActiveTab('cards');
+    } else if (newItemType === 'pdf') {
+      setPdfVault([
+        {
+          id: 'p_' + Date.now(),
+          title: newTitle,
+          category: newLang,
+          summary: newTelugu || 'Custom VLSI Study PDF / Drive Link',
+          url: newBody
+        },
+        ...pdfVault
+      ]);
+      setActiveTab('vault');
+      setVaultSubTab('pdf');
     }
     setNewTitle('');
     setNewBody('');
@@ -429,6 +644,8 @@ export default function App() {
   const maxFreqMHz = (1000 / Math.max(0.1, Number(tCq) + Number(tComb) + Number(tSetup) - Number(tSkew))).toFixed(1);
   const fifoDepth = Math.max(0, Math.ceil(Number(burstSize) * (1 - Number(fRd) / Math.max(1, Number(fWr)))));
 
+  const quizCorrectCount = quizList.filter(q => selectedAnswers[q.id] === q.correct).length;
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex justify-center">
       <div className={`w-full ${mobilePreview ? 'max-w-md my-4 rounded-3xl border-4 border-slate-800 shadow-2xl overflow-hidden' : 'max-w-5xl'} bg-slate-950 flex flex-col min-h-screen relative`}>
@@ -436,7 +653,7 @@ export default function App() {
         {/* Top App Bar */}
         <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
               <Cpu className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -446,7 +663,7 @@ export default function App() {
                   90-Day Target
                 </span>
               </h1>
-              <p className="text-xs text-slate-400">Uday Kiran • ASIC Design & Verification Hub</p>
+              <p className="text-xs text-slate-400">Uday Kiran • ASIC Design, Verification & PDF Hub</p>
             </div>
           </div>
 
@@ -469,66 +686,125 @@ export default function App() {
         {/* Main Content Area */}
         <main className="flex-1 px-4 pt-4 pb-24 overflow-y-auto space-y-5">
 
-          {/* TAB 1: 90-DAY ROADMAP */}
+          {/* TAB 1: 90-DAY ROADMAP + FOCUS TIMER */}
           {activeTab === 'roadmap' && (
             <div className="space-y-5">
-              {/* Overall Progress Card */}
-              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40 border border-slate-800 rounded-2xl p-4 shadow-lg">
-                <div className="flex items-center justify-between mb-2">
+              {/* Top Grid: Mastery Progress + Focus Timer */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2 bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40 border border-slate-800 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
                   <div>
-                    <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Zero-to-VLSI Engineer Tracker</span>
-                    <h2 className="text-lg font-bold text-white">Overall Mastery: {progressPct}%</h2>
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <span className="text-xs uppercase tracking-wider text-cyan-400 font-semibold">Zero-to-VLSI Engineer Tracker</span>
+                        <h2 className="text-lg font-bold text-white">Overall Mastery: {progressPct}%</h2>
+                      </div>
+                      <div className="text-right text-xs text-slate-400">
+                        <div><span className="text-emerald-400 font-bold">{doneCount}</span> Done</div>
+                        <div><span className="text-amber-400 font-bold">{doingCount}</span> In Progress</div>
+                      </div>
+                    </div>
+                    <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-300"
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="text-right text-xs text-slate-400">
-                    <div><span className="text-emerald-400 font-bold">{doneCount}</span> Done</div>
-                    <div><span className="text-amber-400 font-bold">{doingCount}</span> In Progress</div>
+
+                  {/* Daily 6-Hour Routine Checklist */}
+                  <div className="mt-4 pt-3 border-t border-slate-800/80">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                        Today's 6-Hour VLSI Habit
+                      </span>
+                      <button
+                        onClick={() => setDailyTasks({
+                          streak: dailyTasks.streak + 1,
+                          concept2h: false,
+                          coding2h: false,
+                          mock2h: false
+                        })}
+                        className="text-[11px] bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2.5 py-0.5 rounded-md border border-cyan-500/30"
+                      >
+                        + Complete Day & Increment Streak
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {[
+                        { key: 'concept2h', label: '2h Concept Theory (Morris Mano / Notes)' },
+                        { key: 'coding2h', label: '2h EDA Playground RTL / SV Coding' },
+                        { key: 'mock2h', label: '2h Self-Mock Interview (20 Qs Aloud)' }
+                      ].map(item => (
+                        <button
+                          key={item.key}
+                          onClick={() => setDailyTasks({ ...dailyTasks, [item.key]: !dailyTasks[item.key] })}
+                          className={`flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs transition ${
+                            dailyTasks[item.key]
+                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
+                              : 'bg-slate-900/70 border-slate-800 text-slate-300 hover:border-slate-700'
+                          }`}
+                        >
+                          <CheckCircle2 className={`w-4 h-4 shrink-0 ${dailyTasks[item.key] ? 'text-emerald-400' : 'text-slate-600'}`} />
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 transition-all duration-300"
-                    style={{ width: `${progressPct}%` }}
-                  />
                 </div>
 
-                {/* Daily 6-Hour Routine Checklist */}
-                <div className="mt-4 pt-3 border-t border-slate-800/80">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                      Today's 6-Hour VLSI Habit
-                    </span>
-                    <button
-                      onClick={() => setDailyTasks({
-                        streak: dailyTasks.streak + 1,
-                        concept2h: false,
-                        coding2h: false,
-                        mock2h: false
-                      })}
-                      className="text-[11px] bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 px-2.5 py-0.5 rounded-md border border-cyan-500/30"
-                    >
-                      + Complete Day & Increment Streak
-                    </button>
+                {/* Focus Timer Card */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Focus Timer</span>
+                    <div className="flex gap-1">
+                      {[15, 25, 50].map(mins => (
+                        <button
+                          key={mins}
+                          onClick={() => { setTimerRunning(false); setTimerSeconds(mins * 60); }}
+                          className="text-[11px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                        >
+                          {mins}m
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {[
-                      { key: 'concept2h', label: '2h Concept Theory (Morris Mano / Notes)' },
-                      { key: 'coding2h', label: '2h EDA Playground RTL / SV Coding' },
-                      { key: 'mock2h', label: '2h Self-Mock Interview (20 Qs Aloud)' }
-                    ].map(item => (
+
+                  <div className="flex items-center justify-between my-1">
+                    <span className="text-3xl font-mono font-bold text-teal-400 tracking-tight">
+                      {formatTimer(timerSeconds)}
+                    </span>
+                    <div className="flex items-center gap-1.5">
                       <button
-                        key={item.key}
-                        onClick={() => setDailyTasks({ ...dailyTasks, [item.key]: !dailyTasks[item.key] })}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left text-xs transition ${
-                          dailyTasks[item.key]
-                            ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
-                            : 'bg-slate-900/70 border-slate-800 text-slate-300 hover:border-slate-700'
-                        }`}
+                        onClick={() => setTimerRunning(!timerRunning)}
+                        className="flex items-center gap-1 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl transition"
                       >
-                        <CheckCircle2 className={`w-4 h-4 shrink-0 ${dailyTasks[item.key] ? 'text-emerald-400' : 'text-slate-600'}`} />
-                        <span>{item.label}</span>
+                        {timerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        <span>{timerRunning ? 'Pause' : 'Start'}</span>
                       </button>
-                    ))}
+                      <button
+                        onClick={() => { setTimerRunning(false); setTimerSeconds(25 * 60); }}
+                        className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
+                        title="Reset Timer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wider text-slate-400 block mb-1">
+                      🎯 Link Active VLSI Topic:
+                    </label>
+                    <select
+                      value={linkedTopic}
+                      onChange={(e) => setLinkedTopic(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200"
+                    >
+                      {allTopics.map(t => (
+                        <option key={t.id} value={t.title}>{t.title}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -591,74 +867,294 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 2: CODE & NOTES VAULT */}
-          {activeTab === 'vault' && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-2 sm:items-center justify-between">
-                <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Verilog, FIFO, FSM, Constraints, UVM..."
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-cyan-500"
-                  />
+          {/* TAB 2: VLSI WRITTEN TEST MCQ QUIZ & FORMULA SHEET */}
+          {activeTab === 'quiz' && (
+            <div className="space-y-5">
+              {/* VLSI Core Formulas & Equations Tracker */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs uppercase tracking-wider text-cyan-400 font-bold">VLSI Written Test Cheat Sheet</span>
+                    <h3 className="text-base font-bold text-white">Must-Know Equations (STA, CMOS, FIFO & RTL)</h3>
+                  </div>
+                  <button
+                    onClick={handlePrintFullCheatSheet}
+                    className="flex items-center gap-1.5 text-xs bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 px-3 py-1.5 rounded-xl font-semibold"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Export Revision PDF</span>
+                  </button>
                 </div>
-                <button
-                  onClick={() => { setNewItemType('snippet'); setShowAddModal(true); }}
-                  className="flex items-center justify-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add My Code / Note</span>
-                </button>
+
+                <div className="space-y-2">
+                  {vlsiFormulas.map((mod, idx) => (
+                    <div
+                      key={mod.id}
+                      onClick={() => {
+                        const updated = [...vlsiFormulas];
+                        updated[idx].done = !updated[idx].done;
+                        setVlsiFormulas(updated);
+                      }}
+                      className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 cursor-pointer transition space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className={`w-4 h-4 ${mod.done ? 'text-emerald-400' : 'text-slate-600'}`} />
+                          <span className={`text-xs sm:text-sm font-bold ${mod.done ? 'line-through text-slate-500' : 'text-white'}`}>
+                            {mod.subject}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                          {mod.tag}
+                        </span>
+                      </div>
+                      <p className="text-xs font-mono text-cyan-300 pl-6">{mod.formula}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {snippets
-                .filter(s =>
-                  s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  s.lang.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  s.code.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map(snip => (
-                  <div key={snip.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-                    <div className="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                            {snip.lang}
-                          </span>
-                          <h3 className="font-bold text-sm text-white">{snip.title}</h3>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1">{snip.note}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => handleCopy(snip.id, snip.code)}
-                          className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700"
-                        >
-                          {copiedId === snip.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                          <span>{copiedId === snip.id ? 'Copied' : 'Copy'}</span>
-                        </button>
-                        {snip.id.startsWith('s_') && (
-                          <button
-                            onClick={() => setSnippets(snippets.filter(item => item.id !== snip.id))}
-                            className="p-1.5 text-slate-400 hover:text-rose-400"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    <pre className="p-4 text-xs font-mono text-cyan-100 bg-slate-950/90 overflow-x-auto leading-relaxed">
-                      <code>{snip.code}</code>
-                    </pre>
+              {/* Interactive VLSI Written Test MCQ Quiz Engine */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div>
+                    <span className="text-xs uppercase tracking-wider text-cyan-400 font-bold">Interactive Written Test Simulator</span>
+                    <h3 className="text-base font-bold text-white">VLSI Placement MCQ Quiz (ASIC / RTL / Verification)</h3>
                   </div>
-                ))}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg font-bold">
+                      Score: {quizCorrectCount} / {quizList.length}
+                    </span>
+                    <button
+                      onClick={() => setSelectedAnswers({})}
+                      className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-700"
+                    >
+                      Reset Quiz
+                    </button>
+                  </div>
+                </div>
+
+                {quizList.map((qItem, qIdx) => {
+                  const chosen = selectedAnswers[qItem.id];
+                  const answered = chosen !== undefined;
+                  return (
+                    <div key={qItem.id} className="p-4 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                          Q{qIdx + 1} • {qItem.topic}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm font-semibold text-white leading-relaxed">
+                        {qItem.question}
+                      </p>
+                      <div className="space-y-2">
+                        {qItem.options.map((opt, oIdx) => {
+                          const isThisSelected = chosen === oIdx;
+                          const isThisCorrect = qItem.correct === oIdx;
+                          let btnStyle = 'bg-slate-900 border-slate-800 text-slate-200 hover:border-cyan-500/50';
+                          if (answered) {
+                            if (isThisCorrect) {
+                              btnStyle = 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-semibold';
+                            } else if (isThisSelected) {
+                              btnStyle = 'bg-rose-500/20 border-rose-500 text-rose-300';
+                            }
+                          }
+                          return (
+                            <button
+                              key={oIdx}
+                              onClick={() => setSelectedAnswers({ ...selectedAnswers, [qItem.id]: oIdx })}
+                              className={`w-full text-left px-3.5 py-2.5 rounded-xl border text-xs transition flex items-center justify-between ${btnStyle}`}
+                            >
+                              <span>{String.fromCharCode(65 + oIdx)}. {opt}</span>
+                              {answered && isThisCorrect && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {answered && (
+                        <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+                          <strong className="text-cyan-400">Solution: </strong>{qItem.explanation}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {/* TAB 3: FLASHCARDS & INTERVIEW Q&A */}
+          {/* TAB 3: CODE VAULT & UNIFIED VLSI PDF ENGINE */}
+          {activeTab === 'vault' && (
+            <div className="space-y-4">
+              {/* Sub-navigation between RTL Code Vault & VLSI PDF Vault */}
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900 p-2 rounded-2xl border border-slate-800">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setVaultSubTab('code')}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                      vaultSubTab === 'code' ? 'bg-cyan-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Code className="w-4 h-4" />
+                    <span>RTL & SV Code Vault</span>
+                  </button>
+                  <button
+                    onClick={() => setVaultSubTab('pdf')}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                      vaultSubTab === 'pdf' ? 'bg-cyan-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>VLSI PDF Vault</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrintFullCheatSheet}
+                    className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-700"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Generate Full PDF Book</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setNewItemType(vaultSubTab === 'pdf' ? 'pdf' : 'snippet');
+                      setShowAddModal(true);
+                    }}
+                    className="flex items-center gap-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold px-3 py-1.5 rounded-xl"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{vaultSubTab === 'pdf' ? 'Add PDF Link' : 'Add Code'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {vaultSubTab === 'code' ? (
+                <>
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search Verilog, FIFO, FSM, Constraints, UVM..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  {snippets
+                    .filter(s =>
+                      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      s.lang.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      s.code.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map(snip => (
+                      <div key={snip.id} className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                        <div className="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                                {snip.lang}
+                              </span>
+                              <h3 className="font-bold text-sm text-white">{snip.title}</h3>
+                            </div>
+                            <p className="text-xs text-slate-400 mt-1">{snip.note}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleCopy(snip.id, snip.code)}
+                              className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1.5 rounded-lg border border-slate-700"
+                            >
+                              {copiedId === snip.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                              <span>{copiedId === snip.id ? 'Copied' : 'Copy'}</span>
+                            </button>
+                            {snip.id.startsWith('s_') && (
+                              <button
+                                onClick={() => setSnippets(snippets.filter(item => item.id !== snip.id))}
+                                className="p-1.5 text-slate-400 hover:text-rose-400"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <pre className="p-4 text-xs font-mono text-cyan-100 bg-slate-950/90 overflow-x-auto leading-relaxed">
+                          <code>{snip.code}</code>
+                        </pre>
+                      </div>
+                    ))}
+                </>
+              ) : (
+                <div className="space-y-4">
+                  {/* Open Local PDF File In-App */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-bold text-sm text-white flex items-center gap-2">
+                        <Upload className="w-4 h-4 text-cyan-400" />
+                        Open Local VLSI PDF Reader
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Select any Maven Silicon lab manual, handwritten note, or VLSI textbook PDF from your device to read directly inside this app.
+                      </p>
+                    </div>
+                    <label className="cursor-pointer bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold px-4 py-2 rounded-xl shrink-0">
+                      Choose PDF File
+                      <input type="file" accept="application/pdf" onChange={handleLocalPdfUpload} className="hidden" />
+                    </label>
+                  </div>
+
+                  {localPdfUrl && (
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                      <div className="px-4 py-2.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+                        <span className="text-xs font-bold text-cyan-300 truncate">{localPdfName}</span>
+                        <button onClick={() => setLocalPdfUrl(null)} className="text-xs text-rose-400 hover:underline">
+                          Close Reader
+                        </button>
+                      </div>
+                      <iframe src={localPdfUrl} title="PDF Reader" className="w-full h-[480px] border-0" />
+                    </div>
+                  )}
+
+                  {/* Saved PDF Modules & Printable Cheat Sheets */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {pdfVault.map(pdf => (
+                      <div key={pdf.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                            {pdf.category}
+                          </span>
+                          <h4 className="font-bold text-sm text-white mt-2">{pdf.title}</h4>
+                          <p className="text-xs text-slate-400 mt-1 leading-relaxed">{pdf.summary}</p>
+                        </div>
+                        <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+                          {pdf.url ? (
+                            <a
+                              href={pdf.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 text-xs bg-cyan-500/20 text-cyan-300 px-3 py-1.5 rounded-xl font-semibold"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" /> Open Cloud PDF
+                            </a>
+                          ) : (
+                            <button
+                              onClick={handlePrintFullCheatSheet}
+                              className="flex items-center gap-1 text-xs bg-slate-800 hover:bg-slate-700 text-cyan-300 px-3 py-1.5 rounded-xl border border-slate-700 font-semibold"
+                            >
+                              <Printer className="w-3.5 h-3.5" /> Print / Save as PDF
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 4: FLASHCARDS & INTERVIEW Q&A */}
           {activeTab === 'cards' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -746,100 +1242,98 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 4: STA & FIFO CALCULATOR LAB */}
+          {/* TAB 5: STA/FIFO CALCULATOR LAB & MAVEN SILICON PROJECTS */}
           {activeTab === 'lab' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* STA Calculator */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-                <h3 className="font-bold text-sm text-cyan-300 flex items-center gap-2">
-                  <Zap className="w-4 h-4" /> Static Timing Analysis (STA) Calculator
-                </h3>
-                <div className="grid grid-cols-2 gap-2.5 text-xs">
-                  {[
-                    { label: 'Clock Period T_clk (ns)', val: tClk, set: setTClk },
-                    { label: 'Clock-to-Q T_cq (ns)', val: tCq, set: setTCq },
-                    { label: 'Combo Delay T_comb (ns)', val: tComb, set: setTComb },
-                    { label: 'Setup Time T_su (ns)', val: tSetup, set: setTSetup },
-                    { label: 'Hold Time T_hold (ns)', val: tHold, set: setTHold },
-                    { label: 'Clock Skew T_skew (ns)', val: tSkew, set: setTSkew }
-                  ].map((item, i) => (
-                    <div key={i} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                      <label className="text-[11px] text-slate-400 block mb-1">{item.label}</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={item.val}
-                        onChange={(e) => item.set(e.target.value)}
-                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold"
-                      />
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* STA Calculator */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <h3 className="font-bold text-sm text-cyan-300 flex items-center gap-2">
+                    <Zap className="w-4 h-4" /> Static Timing Analysis (STA) Calculator
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2.5 text-xs">
+                    {[
+                      { label: 'Clock Period T_clk (ns)', val: tClk, set: setTClk },
+                      { label: 'Clock-to-Q T_cq (ns)', val: tCq, set: setTCq },
+                      { label: 'Combo Delay T_comb (ns)', val: tComb, set: setTComb },
+                      { label: 'Setup Time T_su (ns)', val: tSetup, set: setTSetup },
+                      { label: 'Hold Time T_hold (ns)', val: tHold, set: setTHold },
+                      { label: 'Clock Skew T_skew (ns)', val: tSkew, set: setTSkew }
+                    ].map((item, i) => (
+                      <div key={i} className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                        <label className="text-[11px] text-slate-400 block mb-1">{item.label}</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={item.val}
+                          onChange={(e) => item.set(e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Setup Slack:</span>
+                      <span className={`font-bold ${Number(setupSlack) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {setupSlack} ns ({Number(setupSlack) >= 0 ? 'MET' : 'VIOLATION!'})
+                      </span>
                     </div>
-                  ))}
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Setup Slack:</span>
-                    <span className={`font-bold ${Number(setupSlack) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {setupSlack} ns ({Number(setupSlack) >= 0 ? 'MET' : 'VIOLATION!'})
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Hold Slack:</span>
-                    <span className={`font-bold ${Number(holdSlack) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {holdSlack} ns ({Number(holdSlack) >= 0 ? 'MET' : 'VIOLATION!'})
-                    </span>
-                  </div>
-                  <div className="flex justify-between pt-1 border-t border-slate-800">
-                    <span className="text-slate-400">Max Clock Frequency (F_max):</span>
-                    <span className="font-bold text-cyan-300">{maxFreqMHz} MHz</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Async FIFO Depth Calculator */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
-                <h3 className="font-bold text-sm text-cyan-300 flex items-center gap-2">
-                  <Layers className="w-4 h-4" /> Asynchronous FIFO Depth Calculator
-                </h3>
-                <div className="space-y-2.5 text-xs">
-                  <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <label className="text-slate-400 block mb-1">Write Clock Frequency F_wr (MHz)</label>
-                    <input type="number" value={fWr} onChange={(e) => setFWr(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold" />
-                  </div>
-                  <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <label className="text-slate-400 block mb-1">Read Clock Frequency F_rd (MHz)</label>
-                    <input type="number" value={fRd} onChange={(e) => setFRd(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold" />
-                  </div>
-                  <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
-                    <label className="text-slate-400 block mb-1">Burst Length B (Data Words Written Back-to-Back)</label>
-                    <input type="number" value={burstSize} onChange={(e) => setBurstSize(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold" />
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Hold Slack:</span>
+                      <span className={`font-bold ${Number(holdSlack) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {holdSlack} ns ({Number(holdSlack) >= 0 ? 'MET' : 'VIOLATION!'})
+                      </span>
+                    </div>
+                    <div className="flex justify-between pt-1 border-t border-slate-800">
+                      <span className="text-slate-400">Max Clock Frequency (F_max):</span>
+                      <span className="font-bold text-cyan-300">{maxFreqMHz} MHz</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
-                  <div className="text-slate-400">Formula: <code className="text-cyan-300">Depth = B × (1 - F_rd / F_wr)</code></div>
-                  <div className="flex justify-between items-center pt-1">
-                    <span className="text-slate-300 font-semibold">Minimum FIFO Depth:</span>
-                    <span className="text-base font-extrabold text-emerald-400">{fifoDepth} Words</span>
+                {/* Async FIFO Depth Calculator */}
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <h3 className="font-bold text-sm text-cyan-300 flex items-center gap-2">
+                    <Layers className="w-4 h-4" /> Asynchronous FIFO Depth Calculator
+                  </h3>
+                  <div className="space-y-2.5 text-xs">
+                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                      <label className="text-slate-400 block mb-1">Write Clock Frequency F_wr (MHz)</label>
+                      <input type="number" value={fWr} onChange={(e) => setFWr(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold" />
+                    </div>
+                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                      <label className="text-slate-400 block mb-1">Read Clock Frequency F_rd (MHz)</label>
+                      <input type="number" value={fRd} onChange={(e) => setFRd(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold" />
+                    </div>
+                    <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                      <label className="text-slate-400 block mb-1">Burst Length B (Data Words Written Back-to-Back)</label>
+                      <input type="number" value={burstSize} onChange={(e) => setBurstSize(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white font-bold" />
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-xs">
+                    <div className="text-slate-400">Formula: <code className="text-cyan-300">Depth = B × (1 - F_rd / F_wr)</code></div>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-slate-300 font-semibold">Minimum FIFO Depth:</span>
+                      <span className="text-base font-extrabold text-emerald-400">{fifoDepth} Words</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* TAB 5: MAVEN SILICON PROJECTS & TELUGU GUIDE */}
-          {activeTab === 'projects' && (
-            <div className="space-y-4">
+              {/* Maven Silicon Projects Defense Section */}
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
                 <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
                   <Award className="w-4 h-4" />
                   <span>Maven Silicon Project 1: 1x3 Packet Router Verification (SV & UVM)</span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  <strong>Architecture Summary:</strong> The 1x3 Router accepts data packets on a single 8-bit input port (<code className="text-cyan-300">data_in</code>) when <code className="text-cyan-300">pkt_valid</code> is high, latches the 2-bit destination address (<code className="text-cyan-300">00, 01, or 10</code>) from the Header byte, pushes payload bytes into one of 3 internal FIFOs (16x9 each), and checks the final Parity byte.
+                  <strong>Architecture Summary:</strong> Accepts 8-bit packets on <code className="text-cyan-300">data_in</code> when <code className="text-cyan-300">pkt_valid</code> is high, decodes the 2-bit destination address (<code className="text-cyan-300">00, 01, 10</code>) from the Header byte, buffers payload bytes into 3 FIFOs (16x9), and verifies the final Parity byte.
                 </p>
                 <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 leading-relaxed">
-                  <strong>తెలుగులో ఇంటర్వ్యూ వివరణ:</strong> ఇంటర్వ్యూలో Router 1x3 గురించి అడిగినప్పుడు—ఇందులో 3 బ్లాక్స్ ఉంటాయి: <strong>1) FSM Controller</strong> (DECODE_ADDRESS, LOAD_FIRST_DATA, LOAD_DATA, LOAD_PARITY, CHECK_PARITY_ERROR స్టేట్స్), <strong>2) Synchronizer</strong>, <strong>3) 3 FIFOs (16x9)</strong>. మనం UVM లో 1 Source Agent మరియు 3 Destination Agents పెట్టి Small, Medium, Big ప్యాకెట్లు మరియు Bad Parity టెస్ట్ కేసులు రాశామని చెప్పండి.
+                  <strong>తెలుగులో ఇంటర్వ్యూ వివరణ:</strong> ఇందులో 3 బ్లాక్స్ ఉంటాయి: <strong>1) FSM Controller</strong>, <strong>2) Synchronizer</strong>, <strong>3) 3 FIFOs (16x9)</strong>. UVM లో 1 Source Agent మరియు 3 Destination Agents పెట్టి Small, Medium, Big ప్యాకెట్లు మరియు Bad Parity టెస్ట్ కేసులు రాశామని చెప్పండి.
                 </div>
               </div>
 
@@ -849,11 +1343,8 @@ export default function App() {
                   <span>Maven Silicon Project 2: AMBA AHB-to-APB Bridge Verification</span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  <strong>Architecture Summary:</strong> Bridges high-speed pipelined <strong>AMBA AHB-Lite</strong> master transfers (<code className="text-cyan-300">HTRANS: IDLE, BUSY, NONSEQ, SEQ</code>) to low-power unpipelined <strong>AMBA APB</strong> peripherals (<code className="text-cyan-300">PSELx, PENABLE, PWRITE</code>), inserting <code className="text-cyan-300">HREADYOUT=0</code> wait states when stretching cycles.
+                  <strong>Architecture Summary:</strong> Translates pipelined <strong>AMBA AHB-Lite</strong> transfers (<code className="text-cyan-300">IDLE, BUSY, NONSEQ, SEQ</code>) to 2-cycle <strong>AMBA APB</strong> peripheral accesses (<code className="text-cyan-300">SETUP, ACCESS</code>), asserting <code className="text-cyan-300">HREADYOUT=0</code> wait states when stretching cycles.
                 </p>
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 leading-relaxed">
-                  <strong>తెలుగులో ఇంటర్వ్యూ వివరణ:</strong> AHB అనేది హై-స్పీడ్ పైప్‌లైన్డ్ బస్, APB అనేది లో-పవర్ 2-సైకిల్ (SETUP మరియు ACCESS) బస్. వీటి మధ్య డేటా నష్టం లేకుండా Single Read/Write మరియు Burst (INCR4, INCR8, WRAP4) ట్రాన్సాక్షన్స్ ఎలా కన్వర్ట్ అవుతాయో Scoreboard లో వెరిఫై చేశామని చెప్పండి.
-                </div>
               </div>
             </div>
           )}
@@ -862,44 +1353,44 @@ export default function App() {
         {/* Floating Quick-Add Button */}
         <button
           onClick={() => setShowAddModal(true)}
-          className="fixed bottom-20 right-6 z-40 w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-xl shadow-cyan-500/30 flex items-center justify-center hover:scale-105 transition"
-          title="Add Custom Note or Flashcard"
+          className="fixed bottom-20 right-6 z-40 w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 text-white shadow-xl shadow-cyan-500/30 flex items-center justify-center hover:scale-105 transition"
+          title="Add Custom Code, Flashcard, or PDF Link"
         >
           <Plus className="w-6 h-6" />
         </button>
 
-        {/* Add Note / Flashcard Modal */}
+        {/* Add Note / Flashcard / PDF Modal */}
         {showAddModal && (
           <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
             <form onSubmit={handleSaveNewItem} className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-5 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-white text-sm">Add to My VLSI Vault</h3>
+                <h3 className="font-bold text-white text-sm">Add to VLSI Pocket Prep</h3>
                 <button type="button" onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setNewItemType('snippet')}
-                  className={`py-2 rounded-xl font-semibold border ${newItemType === 'snippet' ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}
-                >
-                  RTL Code / Note
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setNewItemType('card')}
-                  className={`py-2 rounded-xl font-semibold border ${newItemType === 'card' ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}
-                >
-                  Interview Flashcard
-                </button>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                {[
+                  { id: 'snippet', label: 'RTL Code' },
+                  { id: 'card', label: 'Flashcard' },
+                  { id: 'pdf', label: 'PDF Link' }
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setNewItemType(t.id)}
+                    className={`py-2 rounded-xl font-semibold border ${newItemType === t.id ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-slate-950 border-slate-800 text-slate-400'}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
               <input
                 type="text"
                 required
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
-                placeholder={newItemType === 'snippet' ? 'Title (e.g., Up/Down Counter Verilog)' : 'Interview Question'}
+                placeholder={newItemType === 'snippet' ? 'Title (e.g., Up/Down Counter Verilog)' : newItemType === 'pdf' ? 'PDF Title (e.g., Maven Silicon SV Notes)' : 'Interview Question'}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
               />
               <select
@@ -907,7 +1398,7 @@ export default function App() {
                 onChange={(e) => setNewLang(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
               >
-                {['Digital', 'Verilog', 'SystemVerilog', 'UVM', 'STA', 'AMBA'].map(opt => (
+                {['Digital', 'CMOS', 'Verilog', 'SystemVerilog', 'UVM', 'STA', 'AMBA'].map(opt => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
@@ -916,14 +1407,14 @@ export default function App() {
                 required
                 value={newBody}
                 onChange={(e) => setNewBody(e.target.value)}
-                placeholder={newItemType === 'snippet' ? 'Paste Verilog / SV / UVM code here...' : 'Write the interview answer...'}
+                placeholder={newItemType === 'snippet' ? 'Paste Verilog / SV / UVM code here...' : newItemType === 'pdf' ? 'Paste Google Drive / Web PDF URL here...' : 'Write the interview answer...'}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
               />
               <input
                 type="text"
                 value={newTelugu}
                 onChange={(e) => setNewTelugu(e.target.value)}
-                placeholder="Optional note / తెలుగు వివరణ..."
+                placeholder="Optional summary / తెలుగు వివరణ..."
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white"
               />
               <button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 rounded-xl text-xs">
@@ -937,10 +1428,10 @@ export default function App() {
         <nav className="fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur border-t border-slate-800 flex justify-around py-2 px-2 max-w-5xl mx-auto">
           {[
             { id: 'roadmap', label: '90-Day Plan', icon: BookOpen },
-            { id: 'vault', label: 'Code Vault', icon: Code },
+            { id: 'quiz', label: 'VLSI Quiz', icon: HelpCircle },
+            { id: 'vault', label: 'Code & PDF', icon: FileText },
             { id: 'cards', label: 'Flashcards', icon: Layers },
-            { id: 'lab', label: 'STA/FIFO', icon: Cpu },
-            { id: 'projects', label: 'Projects', icon: Sparkles }
+            { id: 'lab', label: 'STA & Projects', icon: Cpu }
           ].map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -948,7 +1439,7 @@ export default function App() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl text-[11px] font-medium transition ${
+                className={`flex flex-col items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-medium transition ${
                   active ? 'text-cyan-400 font-bold' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
