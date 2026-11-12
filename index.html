@@ -1,18 +1,75 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="VLSI Prep" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0f172a" />
-    <title>VLSI Pocket Prep</title>
+    <title>VLSI Interactive Classroom — Uday Kiran</title>
+
+    <!-- Clean Fonts for English UI, Telugu Explanations & Verilog Code -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+Telugu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS + Automatic Telugu & Monospace Font Mapping -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', '"Noto Sans Telugu"', 'system-ui', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace']
+            }
+          }
+        }
+      };
+    </script>
+
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-    <script>if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js")); }</script>
+
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #020617;
+        color: #f1f5f9;
+        overscroll-behavior-y: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      /* Prevent default Vite template styles from shrinking layout */
+      #root {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-align: left !important;
+      }
+      /* iPhone 13 Notch & Bottom Home Bar Clearance */
+      header {
+        padding-top: max(0.75rem, env(safe-area-inset-top)) !important;
+      }
+      nav {
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom)) !important;
+      }
+    </style>
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js").then((reg) => {
+            reg.update();
+          }).catch(() => {});
+        });
+      }
+    </script>
   </head>
-  <body class="bg-slate-950">
+  <body class="bg-slate-950 font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
